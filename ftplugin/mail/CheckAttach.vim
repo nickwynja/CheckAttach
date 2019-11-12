@@ -263,8 +263,17 @@ fu! <SID>AttachFile(...) "{{{2
 
   let list = []
   if !empty(s:external_file_browser)
-    call <sid>ExternalFileBrowser(isdirectory(pattern) ? pattern :
-      \ fnamemodify(pattern, ':h'))
+    if s:external_file_browser == 'fzf'
+      call fzf#run({
+            \   'source':  'find ~',
+            \   'down': '40%',
+            \   'options': '--multi',
+            \   'sink':    function('WriteFilelistAttach')
+            \ })
+    else
+      call <sid>ExternalFileBrowser(isdirectory(pattern) ? pattern :
+        \ fnamemodify(pattern, ':h'))
+    endif
   else
     " glob supports returning a list
     if v:version > 703 || v:version == 703 && has("patch465")
@@ -298,6 +307,10 @@ fu! <SID>CheckNewLastLine() "{{{2
       let s:oldpos.topline += s:newlastline - s:lastline
     endif
   endif
+endfu
+fu! WriteFilelistAttach(e) "{{{2
+  exec '!echo "' . a:e . '" > ' . s:external_choosefile
+  call <SID>AppendAttachedFiles()
 endfu
 fun <SID>CheckFilePath() "{{{2
   if !get(g:, 'checkattach_check_filepath', 1)

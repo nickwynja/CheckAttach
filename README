@@ -80,10 +80,11 @@ if you really need it.
 ------------------------------
 
 Instead of using Vim to select the files, you can also specify to use an
-external filemanager. It must be configured to write all selected files into a
-temporary file, which in turn will be read in by Vim and put as Attach: header
-into your mail. To use an external filebrowser, use the
-g:checkattach_filebrowser variable.
+external filemanager. If you choose 'fzf', everything should work as expected.
+If you're using another external file manager, it must be configured to write
+all selected files into a temporary file, which in turn will be read in by Vim
+and put as Attach: header into your mail. To use an external filebrowser, use
+the g:checkattach_filebrowser variable.
 
 Let's assume you want to use ranger (http://ranger.nongnu.org/) as external
 file manager. So in your |.vimrc| you put: >
