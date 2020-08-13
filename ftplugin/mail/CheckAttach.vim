@@ -41,12 +41,15 @@ fu! <SID>Init() "{{{2
   " On which keywords to trigger, comma separated list of keywords
   let s:attach_check = 'attach,attachment,enclose,CV,cover letter,\.doc,\.pdf,'.
       \ '\.tex,Anhang,[Aa]n\(ge\)\?häng,Wiedervorlage,Begleitschreiben,anbei'
-  let s:attach_check .= exists("g:attach_check_keywords") ? 
+  let s:attach_check .= exists("g:attach_check_keywords") ?
       \ g:attach_check_keywords : ''
 
   " Check for using an external file browser for selecting the files
-  let s:external_file_browser = exists("g:checkattach_filebrowser") ? 
+  let s:external_file_browser = exists("g:checkattach_filebrowser") ?
       \ g:checkattach_filebrowser : ''
+
+  let s:fzf_source_command = exists("g:checkattach_fzf_command") ?
+      \ g:checkattach_fzf_command : 'find ~'
 
   if !empty(s:external_file_browser)
     let s:external_choosefile = fnameescape(tempname())
@@ -75,8 +78,8 @@ fu! <SID>Init() "{{{2
   endif
 
   " Enable Autocommand per default
-  let s:load_autocmd = exists("g:checkattach_autocmd") ? 
-    \ g:checkattach_autocmd : exists("s:load_autocmd") ? 
+  let s:load_autocmd = exists("g:checkattach_autocmd") ?
+    \ g:checkattach_autocmd : exists("s:load_autocmd") ?
     \ s:load_autocmd : 1
 endfu
 fu! <SID>TriggerAuCmd(enable) "{{{2
@@ -87,13 +90,13 @@ fu! <SID>TriggerAuCmd(enable) "{{{2
 endfu
 fu! <SID>AutoCmd() "{{{2
   " Enable Auto command
-  if !empty("s:load_autocmd") && s:load_autocmd 
-    augroup CheckAttach  
+  if !empty("s:load_autocmd") && s:load_autocmd
+    augroup CheckAttach
       au!
       " First Check file path for existing Attach headers,
       " then Check for more Attachments to come
       au BufWriteCmd <buffer> :call <SID>CheckFilePath()
-      au BufWriteCmd <buffer> :call <SID>CheckAttach() 
+      au BufWriteCmd <buffer> :call <SID>CheckAttach()
     augroup END
   else
     silent! au! CheckAttach BufWriteCmd <buffer>
@@ -200,7 +203,7 @@ fu! <SID>CheckAttach() "{{{2
           let ans = input(prompt2, "", "file")
         endif
       else
-        call <sid>ExternalFileBrowser(isdirectory(ans) ? ans : 
+        call <sid>ExternalFileBrowser(isdirectory(ans) ? ans :
           \ fnamemodify(ans, ':h'))
           let ans = 'n'
       endif
@@ -265,7 +268,7 @@ fu! <SID>AttachFile(...) "{{{2
   if !empty(s:external_file_browser)
     if s:external_file_browser == 'fzf'
       call fzf#run({
-            \   'source':  'find ~',
+            \   'source':  s:fzf_source_command,
             \   'down': '40%',
             \   'options': '--multi',
             \   'sink':    function('WriteFilelistAttach')
@@ -299,7 +302,7 @@ endfu
 fu! <SID>CheckNewLastLine() "{{{2
   let s:newlastline = line('$')
   " Adding text above, means, we need to adjust
-  " the cursor position from the oldpos dictionary. 
+  " the cursor position from the oldpos dictionary.
   " Should oldpos.topline also be adjusted ?
   if s:oldpos.lnum >= s:header_end
     let s:oldpos.lnum += s:newlastline - s:lastline
